@@ -168,7 +168,7 @@ void InitUI()
         gHUD[i].SetCallback(OnGUIEvent);
     }
 
-    int width = 200;
+    int width = 250;
 
     // Generic HUD
     {
