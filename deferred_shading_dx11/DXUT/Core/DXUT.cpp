@@ -775,16 +775,16 @@ HRESULT WINAPI DXUTInit( bool bParseCommandLine,
 //--------------------------------------------------------------------------------------
 // Parses the command line for parameters.  See DXUTInit() for list 
 //--------------------------------------------------------------------------------------
-void DXUTParseCommandLine(__inout WCHAR* strCommandLine, 
-                          bool bIgnoreFirstCommand  )
+void DXUTParseCommandLine(__inout WCHAR* strCommandLine,
+    bool bIgnoreFirstCommand  )
 {
     WCHAR* strCmdLine;
     WCHAR strFlag[MAX_PATH];
 
     int nNumArgs;
     LPWSTR* pstrArgList = CommandLineToArgvW( strCommandLine, &nNumArgs );
-	int iArgStart = 0;
-	if( bIgnoreFirstCommand )
+    int iArgStart = 0;
+    if( bIgnoreFirstCommand )
         iArgStart = 1;
     for( int iArg = iArgStart; iArg < nNumArgs; iArg++ )
     {
@@ -799,9 +799,11 @@ void DXUTParseCommandLine(__inout WCHAR* strCommandLine,
             {
                 if( DXUTGetCmdParam( strCmdLine, strFlag ) )
                 {
-                    if (_wcsnicmp( strFlag, L"D3D_FEATURE_LEVEL_11_0", MAX_PATH) == 0 ) {
-                        GetDXUTState().SetOverrideForceFeatureLevel(D3D_FEATURE_LEVEL_11_0);
-                    }else if (_wcsnicmp( strFlag, L"D3D_FEATURE_LEVEL_10_1", MAX_PATH) == 0 ) {
+                    if (_wcsnicmp(strFlag, L"D3D_FEATURE_LEVEL_11_1", MAX_PATH) == 0) {
+                        GetDXUTState().SetOverrideForceFeatureLevel(D3D_FEATURE_LEVEL_11_1);
+                        }else if (_wcsnicmp(strFlag, L"D3D_FEATURE_LEVEL_11_0", MAX_PATH) == 0) {
+                            GetDXUTState().SetOverrideForceFeatureLevel(D3D_FEATURE_LEVEL_11_0);
+                        }else if (_wcsnicmp( strFlag, L"D3D_FEATURE_LEVEL_10_1", MAX_PATH) == 0 ) {
                         GetDXUTState().SetOverrideForceFeatureLevel(D3D_FEATURE_LEVEL_10_1);
                     }else if (_wcsnicmp( strFlag, L"D3D_FEATURE_LEVEL_10_0", MAX_PATH) == 0 ) {
                         GetDXUTState().SetOverrideForceFeatureLevel(D3D_FEATURE_LEVEL_10_0);
@@ -814,10 +816,10 @@ void DXUTParseCommandLine(__inout WCHAR* strCommandLine,
                     }
 
 
-                    continue;
+                        continue;
+                    }
                 }
-            }
-            
+
             if( DXUTIsNextArg( strCmdLine, L"forceapi" ) )
             {
                 if( DXUTGetCmdParam( strCmdLine, strFlag ) )

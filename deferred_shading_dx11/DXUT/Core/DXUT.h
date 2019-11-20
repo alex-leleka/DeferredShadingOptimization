@@ -78,6 +78,8 @@
 #include <crtdbg.h>
 #endif
 
+#include <dxgi1_2.h>
+#include <d3d11_1.h>
 // Direct3D9 includes
 #include <d3d9.h>
 #include <d3dx9.h>

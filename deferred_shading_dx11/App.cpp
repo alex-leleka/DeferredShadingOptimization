@@ -12,6 +12,8 @@
 // assume any responsibility for any errors which may appear in this software nor any
 // responsibility to update it.
 
+#include <Windows.h>
+
 #include "App.h"
 #include "ColorUtil.h"
 #include "ShaderDefines.h"
@@ -19,6 +21,8 @@
 #include <sstream>
 #include <random>
 #include <algorithm>
+// markers
+#include <atlbase.h> // Contains the declaration of CComPtr.
 
 using std::tr1::shared_ptr;
 
@@ -624,6 +628,11 @@ void App::ComputeLighting(ID3D11DeviceContext* d3dDeviceContext,
                           const D3D11_VIEWPORT* viewport,
                           const UIConstants* ui)
 {
+    CComPtr<ID3DUserDefinedAnnotation> pPerf;
+    HRESULT hr = d3dDeviceContext->QueryInterface(__uuidof(pPerf), reinterpret_cast<void**>(&pPerf));
+    if (FAILED(hr))
+        return;
+    pPerf->BeginEvent(L"App::ComputeLighting");
     // TODO: Clean up the branchiness here a bit... refactor into small functions
          
     switch (ui->lightCullTechnique) {
@@ -820,6 +829,9 @@ void App::ComputeLighting(ID3D11DeviceContext* d3dDeviceContext,
     break;
 
     };  // switch
+
+
+    pPerf->EndEvent();
 
     // Cleanup (aka make the runtime happy)
     d3dDeviceContext->VSSetShader(0, 0, 0);
