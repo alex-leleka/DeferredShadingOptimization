@@ -63,14 +63,14 @@ float3 ComputePositionViewFromZ(float2 positionScreen,
     return positionView;
 }
 
-SurfaceData ComputeSurfaceDataFromGBufferSampleTile(uint2 positionViewport, uint2 texelInTileOffset)
+SurfaceData ComputeSurfaceDataFromGBufferSampleTile(uint2 positionViewport)
 {
     // Load the raw data from the GBuffer
     GBuffer rawData;
-    rawData.normal_specular = gGBufferTextures[0].Load(positionViewport.xy, 0, texelInTileOffset).xyzw;
-    rawData.albedo = gGBufferTextures[1].Load(positionViewport.xy, 0, texelInTileOffset).xyzw;
-    rawData.positionZGrad = gGBufferTextures[2].Load(positionViewport.xy, 0, texelInTileOffset).xy;
-    float zBuffer = gGBufferTextures[3].Load(positionViewport.xy, 0, texelInTileOffset).x;
+    rawData.normal_specular = gGBufferTextures[0].Load(positionViewport.xy, 0).xyzw;
+    rawData.albedo = gGBufferTextures[1].Load(positionViewport.xy, 0).xyzw;
+    rawData.positionZGrad = gGBufferTextures[2].Load(positionViewport.xy, 0).xy;
+    float zBuffer = gGBufferTextures[3].Load(positionViewport.xy, 0).x;
     
     float2 gbufferDim;
     uint dummy;
@@ -167,7 +167,7 @@ void ComputeSurfaceDataFromGBufferAllSamplesTile(uint2 positionViewport,
     // this loop ensures that the compiler has an easy time with the dead code elimination.
     
     for (uint i = 0; i < TILE_SIZE_X; ++i) {
-        surface[i] = ComputeSurfaceDataFromGBufferSampleTile(positionViewport + offsetsTile[i], int2(0,0));
+        surface[i] = ComputeSurfaceDataFromGBufferSampleTile(positionViewport + offsetsTile[i]);
     }
 }
 
@@ -199,7 +199,7 @@ bool RequiresPerSampleShadingTile(SurfaceData surface[TILE_SIZE_X])
     bool perSample = false;
 
     const float maxZDelta = abs(surface[0].positionViewDX.z) + abs(surface[0].positionViewDY.z);
-    const float minNormalDot = 1.0f;   // Allow  4 degree normal deviations
+    const float minNormalDot = 0.99999999f;   // Allow  0.5 degree normal deviations
     // const float minNormalDot = 0.99 // Allow ~8 degree normal deviations
 
     [unroll] for (uint i = 1; i < TILE_SIZE_X; ++i) {

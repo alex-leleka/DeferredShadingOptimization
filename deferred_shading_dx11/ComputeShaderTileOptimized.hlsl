@@ -33,13 +33,6 @@ groupshared uint sTileNumLights;
 groupshared uint sPerSamplePixels[COMPUTE_SHADER_TILE_GROUP_SIZE];
 groupshared uint sNumPerSamplePixels;
 
-//--------------------------------------------------------------------------------------
-// Utility for writing to our flat MSAAed UAV
-void WriteSample(uint2 coords, uint sampleIndex, float4 value)
-{
-    gFramebuffer[GetFramebufferSampleAddress(coords, sampleIndex)] = PackRGBA16(value);
-}
-
 void WriteSampleTile(uint2 coords, uint sampleIndex, float4 value)
 {
     gFramebuffer[GetFramebufferSampleAddress(coords + offsetsTile[sampleIndex], 0)] = PackRGBA16(value);
@@ -133,7 +126,7 @@ void ComputeShaderTileCS(uint3 groupId          : SV_GroupID,
     // little bit of math anyways, but worth testing.
 
     // Work out scale/bias from [0, 1]
-    float2 tileScale = float2(mFramebufferDimensions.xy) * rcp(float(2 * COMPUTE_SHADER_TILE_GROUP_DIM)) / float(TILE_X_LEN);
+    float2 tileScale = float2(mFramebufferDimensions.xy) * rcp(float(2 * COMPUTE_SHADER_TILE_GROUP_DIM * TILE_X_LEN));
     float2 tileBias = tileScale - float2(groupId.xy);
 
     // Now work out composite projection matrix
@@ -264,7 +257,7 @@ void ComputeShaderTileCS(uint3 groupId          : SV_GroupID,
 
             //uint2 sampleCoords = UnpackCoords(sPerSamplePixels[0]);
             uint2 sampleCoords = UnpackCoords(sPerSamplePixels[listIndex]);
-            SurfaceData surface = ComputeSurfaceDataFromGBufferSampleTile(sampleCoords + offsetsTile[sampleIndex], int2(0,0));
+            SurfaceData surface = ComputeSurfaceDataFromGBufferSampleTile(sampleCoords + offsetsTile[sampleIndex]);
 
             float3 lit = float3(0.0f, 0.0f, 0.0f);
             for (uint tileLightIndex = 0; tileLightIndex < numLights; ++tileLightIndex) {
