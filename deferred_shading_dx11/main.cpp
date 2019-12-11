@@ -28,7 +28,6 @@
 static const float kLightRotationSpeed = 0.05f;
 static const float kSliderFactorResolution = 10000.0f;
 
-
 enum SCENE_SELECTION {
     POWER_PLANT_SCENE,
     SPONZA_SCENE,
@@ -255,13 +254,13 @@ void UpdateUIState()
 }
 
 
-void InitApp(ID3D11Device* d3dDevice)
+void InitApp(ID3D11Device* d3dDevice, ID3D11DeviceContext* d3dDeviceContext)
 {
     DestroyApp();
     
     // Get current UI settings
     unsigned int msaaSamples = PtrToUint(gMSAACombo->GetSelectedData());
-    gApp = new App(d3dDevice, 1 << gLightsSlider->GetValue(), msaaSamples);
+    gApp = new App(d3dDevice, 1 << gLightsSlider->GetValue(), msaaSamples, d3dDeviceContext);
 
     // Initialize with the current surface description
     gApp->OnD3D11ResizedSwapChain(d3dDevice, DXUTGetDXGIBackBufferSurfaceDesc());
@@ -553,7 +552,7 @@ void CALLBACK OnD3D11FrameRender(ID3D11Device* d3dDevice, ID3D11DeviceContext* d
 
     // Lazily create the application if need be
     if (!gApp) {
-        InitApp(d3dDevice);
+        InitApp(d3dDevice, d3dDeviceContext);
     }
 
     // Lazily load scene

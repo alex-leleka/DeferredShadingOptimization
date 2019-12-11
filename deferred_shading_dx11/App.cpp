@@ -21,8 +21,6 @@
 #include <sstream>
 #include <random>
 #include <algorithm>
-// markers
-#include <atlbase.h> // Contains the declaration of CComPtr.
 
 using std::tr1::shared_ptr;
 
@@ -46,7 +44,7 @@ struct PerFrameConstants
 };
 
 
-App::App(ID3D11Device *d3dDevice, unsigned int activeLights, unsigned int msaaSamples)
+App::App(ID3D11Device *d3dDevice, unsigned int activeLights, unsigned int msaaSamples, ID3D11DeviceContext* d3dDeviceContext)
     : mMSAASamples(msaaSamples)
     , mTotalTime(0.0f)
     , mActiveLights(0)
@@ -209,6 +207,10 @@ App::App(ID3D11Device *d3dDevice, unsigned int activeLights, unsigned int msaaSa
 
     InitializeLightParameters(d3dDevice);
     SetActiveLights(d3dDevice, activeLights);
+
+#ifdef DEBUG
+    mProfileMarker.Init(d3dDeviceContext);
+#endif
 }
 
 
@@ -416,6 +418,7 @@ void App::Render(ID3D11DeviceContext* d3dDeviceContext,
                  const D3D11_VIEWPORT* viewport,
                  const UIConstants* ui)
 {
+    mProfileMarker.BeginEvent(L"App::Render");
     D3DXMATRIXA16 cameraProj = *viewerCamera->GetProjMatrix();
     D3DXMATRIXA16 cameraView = *viewerCamera->GetViewMatrix();
     
@@ -473,6 +476,7 @@ void App::Render(ID3D11DeviceContext* d3dDeviceContext,
     // Render skybox and tonemap
     RenderSkyboxAndToneMap(d3dDeviceContext, backBuffer, skybox,
         mDepthBuffer->GetShaderResource(), viewport, ui);
+    mProfileMarker.EndEvent();
 }
 
 
@@ -505,6 +509,7 @@ ID3D11ShaderResourceView * App::RenderForward(ID3D11DeviceContext* d3dDeviceCont
                                               const UIConstants* ui,
                                               bool doPreZ)
 {
+    mProfileMarker.BeginEvent(L"RenderForward");
     // Clear lit and depth buffer
     const float zeros[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     d3dDeviceContext->ClearRenderTargetView(mLitBufferPS->GetRenderTarget(), zeros);
@@ -570,6 +575,7 @@ ID3D11ShaderResourceView * App::RenderForward(ID3D11DeviceContext* d3dDeviceCont
     d3dDeviceContext->OMSetRenderTargets(0, 0, 0);
 
     return mLitBufferPS->GetShaderResource();
+    mProfileMarker.EndEvent();
 }
 
 
@@ -580,6 +586,7 @@ void App::RenderGBuffer(ID3D11DeviceContext* d3dDeviceContext,
                         const D3D11_VIEWPORT* viewport,
                         const UIConstants* ui)
 {
+    mProfileMarker.BeginEvent(L"RenderGBuffer");
     // Clear GBuffer
     // NOTE: We actually only need to clear the depth buffer here since we replace unwritten (i.e. far plane) samples
     // with the skybox. We use the depth buffer to reconstruct position and only in-frustum positions are shaded.
@@ -606,20 +613,25 @@ void App::RenderGBuffer(ID3D11DeviceContext* d3dDeviceContext,
     
     // Render opaque geometry
     if (mesh_opaque.IsLoaded()) {
+        mProfileMarker.BeginEvent(L"mesh_opaque.Render");
         d3dDeviceContext->RSSetState(mRasterizerState);
         d3dDeviceContext->PSSetShader(mGBufferPS->GetShader(), 0, 0);
         mesh_opaque.Render(d3dDeviceContext, 0);
+        mProfileMarker.EndEvent();
     }
 
     // Render alpha tested geometry
     if (mesh_alpha.IsLoaded()) {
+        mProfileMarker.BeginEvent(L"mesh_alpha.Render");
         d3dDeviceContext->RSSetState(mDoubleSidedRasterizerState);
         d3dDeviceContext->PSSetShader(mGBufferAlphaTestPS->GetShader(), 0, 0);
         mesh_alpha.Render(d3dDeviceContext, 0);
+        mProfileMarker.EndEvent();
     }
 
     // Cleanup (aka make the runtime happy)
     d3dDeviceContext->OMSetRenderTargets(0, 0, 0);
+    mProfileMarker.EndEvent();
 }
 
 
@@ -628,11 +640,7 @@ void App::ComputeLighting(ID3D11DeviceContext* d3dDeviceContext,
                           const D3D11_VIEWPORT* viewport,
                           const UIConstants* ui)
 {
-    CComPtr<ID3DUserDefinedAnnotation> pPerf;
-    HRESULT hr = d3dDeviceContext->QueryInterface(__uuidof(pPerf), reinterpret_cast<void**>(&pPerf));
-    if (FAILED(hr))
-        return;
-    pPerf->BeginEvent(L"App::ComputeLighting");
+    mProfileMarker.BeginEvent(L"ComputeLighting");
     // TODO: Clean up the branchiness here a bit... refactor into small functions
          
     switch (ui->lightCullTechnique) {
@@ -830,9 +838,6 @@ void App::ComputeLighting(ID3D11DeviceContext* d3dDeviceContext,
 
     };  // switch
 
-
-    pPerf->EndEvent();
-
     // Cleanup (aka make the runtime happy)
     d3dDeviceContext->VSSetShader(0, 0, 0);
     d3dDeviceContext->GSSetShader(0, 0, 0);
@@ -844,6 +849,7 @@ void App::ComputeLighting(ID3D11DeviceContext* d3dDeviceContext,
     d3dDeviceContext->CSSetShaderResources(0, 8, nullSRV);
     ID3D11UnorderedAccessView *nullUAV[1] = {0};
     d3dDeviceContext->CSSetUnorderedAccessViews(0, 1, nullUAV, 0);
+    mProfileMarker.EndEvent();
 }
 
 
@@ -854,6 +860,7 @@ void App::RenderSkyboxAndToneMap(ID3D11DeviceContext* d3dDeviceContext,
                                  const D3D11_VIEWPORT* viewport,
                                  const UIConstants* ui)
 {
+    mProfileMarker.BeginEvent(L"RenderSkyboxAndToneMap");
     D3D11_VIEWPORT skyboxViewport(*viewport);
     skyboxViewport.MinDepth = 1.0f;
     skyboxViewport.MaxDepth = 1.0f;
@@ -896,4 +903,5 @@ void App::RenderSkyboxAndToneMap(ID3D11DeviceContext* d3dDeviceContext,
     d3dDeviceContext->OMSetRenderTargets(0, 0, 0);
     ID3D11ShaderResourceView* nullViews[10] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     d3dDeviceContext->PSSetShaderResources(0, 10, nullViews);
+    mProfileMarker.EndEvent();
 }

@@ -20,6 +20,7 @@
 #include "Texture2D.h"
 #include "Shader.h"
 #include "Buffer.h"
+#include "profilemarker.h"
 #include <vector>
 #include <memory>
 
@@ -74,7 +75,7 @@ struct FramebufferFlatElement
 class App
 {
 public:
-    App(ID3D11Device* d3dDevice, unsigned int activeLights, unsigned int msaaSamples);
+    App(ID3D11Device* d3dDevice, unsigned int activeLights, unsigned int msaaSamples, ID3D11DeviceContext* d3dDeviceContext);
 
     ~App();
     
@@ -218,4 +219,5 @@ private:
     std::vector<D3DXVECTOR3> mPointLightPositionWorld;
     
     StructuredBuffer<PointLight>* mLightBuffer;
+    CProfileMarker mProfileMarker;
 };

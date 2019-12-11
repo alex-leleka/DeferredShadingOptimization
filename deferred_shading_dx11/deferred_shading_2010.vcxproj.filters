@@ -81,6 +81,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Texture2D.cpp" />
     <ClCompile Include="ColorUtil.cpp" />
+    <ClCompile Include="profilemarker.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DXUT\Core\DXUT.h">
@@ -122,6 +123,7 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="profilemarker.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="deferred_shading_2010.rc" />

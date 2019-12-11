@@ -22,10 +22,10 @@
 
 // If app hasn't choosen, set to work with Windows XP and beyond
 #ifndef WINVER
-#define WINVER         0x0501
+#define WINVER         0x1503
 #endif
 #ifndef _WIN32_WINDOWS
-#define _WIN32_WINDOWS 0x0501
+#define _WIN32_WINDOWS 0x1503
 #endif
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT   0x0600
